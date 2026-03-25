@@ -1,6 +1,7 @@
 package com.pharmaease.controller;
 
 import com.pharmaease.model.Orders;
+import com.pharmaease.model.OrderItem;
 import com.pharmaease.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -66,9 +68,22 @@ public class OrderController {
     }
 
     @GetMapping("/view/{id}")
+    @Transactional(readOnly = true)
     public String viewOrder(@PathVariable Long id, Model model) {
         try {
             Orders order = orderService.getOrderById(id);
+
+            // Defensive: avoid Thymeleaf touching lazy proxies after session close
+            List<OrderItem> items = order.getOrderItems();
+            if (items != null) {
+                for (OrderItem item : items) {
+                    if (item.getMedicine() != null) {
+                        item.getMedicine().getName(); // Trigger lazy load
+                    }
+                }
+                order.setOrderItems(new ArrayList<>(items));
+            }
+
             model.addAttribute("order", order);
             return "order-details";
         } catch (Exception e) {

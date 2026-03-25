@@ -49,7 +49,8 @@ public class ReportService {
         report.setTotalSales(totalSales);
         report.setTotalOrders(totalOrders);
         report.setGeneratedBy(pharmacist);
-        report.setSummary(String.format("Sales report from %s to %s. Total orders: %d, Total sales: $%.2f",
+        // Use rupee symbol in the human-readable summary text
+        report.setSummary(String.format("Sales report from %s to %s. Total orders: %d, Total sales: ₹%.2f",
                 startDate, endDate, totalOrders, totalSales));
 
         return reportRepository.save(report);

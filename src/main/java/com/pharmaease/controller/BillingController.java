@@ -165,28 +165,27 @@ public class BillingController {
     public String viewInvoice(@PathVariable Long orderId, Model model, RedirectAttributes redirectAttributes) {
         try {
             Orders order = orderService.getOrderById(orderId);
-            
-            // CRITICAL: Force initialization of all lazy collections before transaction closes
-            // Access orderItems and their nested relationships
-            if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
-                for (OrderItem item : order.getOrderItems()) {
-                    // Force initialization of medicine relationship
+
+            // Defensive: make sure Thymeleaf never touches a Hibernate lazy proxy.
+            // We initialize and then replace the collection with a plain ArrayList so it stays usable
+            // even if the session is closed before view rendering completes.
+            List<OrderItem> items = order.getOrderItems();
+            if (items != null) {
+                for (OrderItem item : items) {
                     if (item.getMedicine() != null) {
                         item.getMedicine().getName(); // Trigger lazy load
                     }
                 }
-                // Also get size to ensure collection is fully loaded
-                int size = order.getOrderItems().size();
+                int size = items.size(); // Trigger full collection initialization
                 System.out.println("✅ Initialized " + size + " order items for invoice");
+
+                // Replace Hibernate-managed collection with a plain list
+                order.setOrderItems(new ArrayList<>(items));
             }
-            
-            // Initialize customer and pharmacist if needed
-            if (order.getCustomer() != null) {
-                order.getCustomer().getName();
-            }
-            if (order.getPharmacist() != null) {
-                order.getPharmacist().getName();
-            }
+
+            // EAGER anyway, but keep initialization explicit
+            if (order.getCustomer() != null) order.getCustomer().getName();
+            if (order.getPharmacist() != null) order.getPharmacist().getName();
             
             try {
                 Invoice invoice = billingService.getInvoiceByOrder(order);

@@ -115,7 +115,11 @@
 
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 class="mb-4 text-lg font-semibold text-slate-900">Summary Text</h3>
-                <p class="text-sm text-slate-700" th:text="${report.summary}">Summary of the report...</p>
+                <!-- Replace any stored '$' symbols with '₹' so older reports also display correctly -->
+                <p class="text-sm text-slate-700"
+                   th:text="${#strings.replace(report.summary, '$', '₹')}">
+                    Summary of the report...
+                </p>
             </div>
         </div>
 
