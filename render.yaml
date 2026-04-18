@@ -4,6 +4,7 @@ services:
     env: java
     plan: free
     autoDeploy: true
+    healthCheckPath: /
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java -Dserver.port=$PORT -jar target/PharmaEase-0.0.1-SNAPSHOT.jar
     envVars:
@@ -19,5 +20,9 @@ services:
         value: org.hibernate.dialect.PostgreSQLDialect
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
         value: update
-
-
+      - key: SPRING_JPA_SHOW_SQL
+        value: "false"
+      - key: SPRING_THYMELEAF_CACHE
+        value: "true"
+      - key: LOG_LEVEL_APP
+        value: INFO
